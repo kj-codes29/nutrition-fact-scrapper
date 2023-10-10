@@ -1,5 +1,6 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+import json
 
 URL = "https://www.ah.nl"
 driver = webdriver.Chrome()
@@ -48,24 +49,16 @@ def convert_table_info():
     
     return nutrition
 
-def convert_product(product):
-    info = product.find_element(By.CLASS_NAME, 'link_root__EqRHd')
-    img_element = product.find_element(By.TAG_NAME, 'img')
-    name = info.get_attribute('title')
-    link = info.get_attribute('href')
-    img = img_element.get_attribute('src')
+def convert_products(products):
+    for product in products:
+        info = product.find_element(By.CLASS_NAME, 'link_root__EqRHd')
+        img_element = product.find_element(By.TAG_NAME, 'img')
+        name = info.get_attribute('title')
+        link = info.get_attribute('href')
+        img = img_element.get_attribute('src')
 
-    product.click()
-
-    driver.implicitly_wait(1)
-
-    # nutrition facts
-    nutrition = convert_table_info()
-    product_list.append({'name': name, 'link':link, 'image':img, 'Nutrition Info': nutrition})
-
-    # go back in history
-    driver.back()
-    driver.implicitly_wait(1)
+        # product information
+        product_list.append({'name': name, 'link':link, 'image':img, 'Nutrition Info': []})
         
 
 # print(nutrition)
@@ -80,6 +73,7 @@ def get_displayed_amount():
 current_amount, total_amount = get_displayed_amount()
 
 products = driver.find_elements(By.CLASS_NAME, 'product-card-portrait_root__ZiRpZ')
+convert_products(products)
 
 while(current_amount <= 75):
     more_button = driver.find_element(By.CLASS_NAME, 'button-default_primary__mURfJ')
@@ -94,6 +88,11 @@ while(current_amount <= 75):
     product_lane = driver.find_elements(By.CLASS_NAME, 'product-grid-lane_root__rii9N')[-2]
     new_products = product_lane.find_elements(By.CLASS_NAME, 'product-card-portrait_root__ZiRpZ')
     # get information about each product
-    convert_product(new_products[1])
+    convert_products(new_products)
 
-print(product_list)
+with open("sample.json", "w") as outfile:
+    json.dump(product_list, outfile)
+
+
+# create a product list with all the products 
+# visit each link with the scraper and get the data from each products
