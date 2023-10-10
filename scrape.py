@@ -1,4 +1,3 @@
-import time
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 
@@ -11,7 +10,7 @@ cookie_button = driver.find_element(By.XPATH, '//*[@id="accept-cookies"]')
 
 cookie_button.click()
 
-time.sleep(1)
+driver.implicitly_wait(1)
 
 categories = driver.find_elements(By.CLASS_NAME, 'product-category-overview_category__vqzcb')
 
@@ -27,7 +26,18 @@ for category in categories:
 
 categories[0].click()
 
-time.sleep(1)
+driver.implicitly_wait(1)
+
+product_list = []
+
+def convert_products(products):
+    for product in products:
+        info = product.find_element(By.CLASS_NAME, 'link_root__EqRHd')
+        img_element = product.find_element(By.TAG_NAME, 'img')
+        name = info.get_attribute('title')
+        link = info.get_attribute('href')
+        img = img_element.get_attribute('src')
+        product_list.append({'name': name, 'link':link, 'image':img})
 
 def get_displayed_amount():
     total_products_info = driver.find_element(By.XPATH, '//*[@id="start-of-content"]/div[3]/span').text
@@ -38,34 +48,24 @@ def get_displayed_amount():
 
 current_amount, total_amount = get_displayed_amount()
 
-more_button = driver.find_element(By.CLASS_NAME, 'button-default_primary__mURfJ')
-
-while(current_amount < total_amount):
-    print(current_amount)
-    time.sleep(1)
-    more_button.click()
-    more_button = driver.find_element(By.CLASS_NAME, 'button-default_primary__mURfJ')
-    current_amount, total_amount = get_displayed_amount()
-
-
 products = driver.find_elements(By.CLASS_NAME, 'product-card-portrait_root__ZiRpZ')
 
-product_list = []
+while(current_amount <= 111):
+    more_button = driver.find_element(By.CLASS_NAME, 'button-default_primary__mURfJ')
+    more_button.click()
+    print('......loading products')
+    driver.implicitly_wait(2)
 
-def convert_products():
-    for product in products:
-        info = product.find_element(By.CLASS_NAME, 'link_root__EqRHd')
-        img_element = product.find_element(By.TAG_NAME, 'img')
-        name = info.get_attribute('title')
-        link = info.get_attribute('href')
-        img = img_element.get_attribute('src')
-        product_list.append({'name': name, 'link':link, 'image':img})
-
-
-convert_products()
+    current_amount, total_amount = get_displayed_amount()
+    print(current_amount)
+    
+    # get new loaded products
+    product_lane = driver.find_elements(By.CLASS_NAME, 'product-grid-lane_root__rii9N')[-2]
+    new_products = product_lane.find_elements(By.CLASS_NAME, 'product-card-portrait_root__ZiRpZ')
+    # get information about each product
+    convert_products(new_products)
 
 print(len(product_list))
-
 
 # driver.get(URL+products[4]['link'])
 
