@@ -1,28 +1,33 @@
-import requests
 import time
-from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 
 URL = "https://www.ah.nl"
+driver = webdriver.Chrome()
 
-page = requests.get(URL+"/producten")
+driver.get(URL+"/producten")
 
-soup = BeautifulSoup(page.content, 'html.parser')
+cookie_button = driver.find_element(By.XPATH, '//*[@id="accept-cookies"]')
 
+cookie_button.click()
 
-results = soup.find_all("div", class_="product-category-overview_category__vqzcb")
+time.sleep(1)
+
+results = driver.find_elements(By.CLASS_NAME, 'product-category-overview_category__vqzcb')
 
 product_types = []
 
 for result in results:
-    info = result.find("a", class_="taxonomy-card_imageLink__4b6bk")
-    type = info['title']
-    link = info['href']
-    product_types.append({'Type': type, 'link':link})
+    info = result.find_element(By.CLASS_NAME, 'taxonomy-card_imageLink__4b6bk')
+    img_element = result.find_element(By.CLASS_NAME, 'taxonomy-card_image__RPcqB')
+    type = info.get_attribute('title')
+    link = info.get_attribute('href')
+    img_link = img_element.get_attribute('src')
+    product_types.append({'Type': type, 'link':link, 'Img': img_link})
 
+print(product_types)
 
-
+'''
 page = requests.get(URL+product_types[0]['link'])
 soup = BeautifulSoup(page.content, 'html.parser')
 
@@ -37,8 +42,6 @@ for result in results:
     products.append({'name': name, 'link':link})
 
 
-
-driver = webdriver.Chrome()
 driver.get(URL+products[4]['link'])
 
 
@@ -63,3 +66,4 @@ for index, row in enumerate(rows):
 
 
 print(nutrition)
+'''
